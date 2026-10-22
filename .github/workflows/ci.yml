@@ -1,0 +1,93 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  native:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            rid: linux-x64
+          - os: windows-2025
+            rid: win-x64
+          - os: macos-15
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: rustup toolchain install 1.99.0 --profile minimal
+      - run: bash scripts/build-native.sh --rid ${{ matrix.rid }}
+        shell: bash
+      - run: dotnet restore Stampeded.slnx
+      - run: dotnet build Stampeded.slnx -c Release --no-restore
+      - run: dotnet format Stampeded.slnx --verify-no-changes --no-restore
+      # Database cases run in the Linux integration job below; native cases run on all hosts.
+      - run: dotnet test --solution Stampeded.slnx -c Release --no-build
+      - uses: actions/upload-artifact@v6
+        with:
+          name: native-${{ matrix.rid }}
+          path: runtimes/**
+          if-no-files-found: error
+
+  integration:
+    needs: native
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_DB: stampeded_test
+          POSTGRES_USER: stampeded
+          POSTGRES_PASSWORD: stampeded
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U stampeded -d stampeded_test"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      STAMPEDED_TEST_CONNECTION_STRING: Host=localhost;Port=5432;Database=stampeded_test;Username=stampeded;Password=stampeded
+      STAMPEDED_REQUIRE_DATABASE_TESTS: 1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: native-*
+          path: runtimes
+          merge-multiple: true
+      - run: python scripts/verify-upstream.py
+      - run: dotnet restore Stampeded.slnx
+      - run: dotnet build Stampeded.slnx -c Release --no-restore
+      - run: dotnet test --solution Stampeded.slnx -c Release --no-build
+      - run: dotnet pack Stampeded.slnx -c Release --no-build -o artifacts/packages
+      - run: python scripts/verify-package.py artifacts/packages/Stampeded.NET.0.1.0-preview.1.nupkg
+      - uses: actions/upload-artifact@v6
+        with:
+          name: nuget-preview
+          path: artifacts/packages/*.nupkg
+          if-no-files-found: error

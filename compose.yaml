@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: stampeded
+      POSTGRES_USER: stampeded
+      POSTGRES_PASSWORD: stampeded
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - stampeded-postgres:/var/lib/postgresql
+      - ./native/upstream/crates/stampeded/schema/schema.sql:/docker-entrypoint-initdb.d/001-stampeded.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stampeded -d stampeded"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+volumes:
+  stampeded-postgres:

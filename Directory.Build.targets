@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <NativeRuntimeIdentifier Condition="'$(NativeRuntimeIdentifier)' == '' and '$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</NativeRuntimeIdentifier>
+    <NativeRuntimeIdentifier Condition="'$(NativeRuntimeIdentifier)' == ''">$(NETCoreSdkPortableRuntimeIdentifier)</NativeRuntimeIdentifier>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(NativeRuntimeIdentifier)' != ''">
+    <None Include="$(MSBuildThisFileDirectory)runtimes/$(NativeRuntimeIdentifier)/native/*"
+          Link="%(Filename)%(Extension)" Pack="false"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageId>Stampeded.NET.Hosting</PackageId>
+    <Description>Dependency injection and hosted workers for Stampeded.NET.</Description>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../Stampeded/Stampeded.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <InternalsVisibleTo Include="Stampeded.Tests" />
+    <None Include="../../README.md" Pack="true" PackagePath="/" />
+  </ItemGroup>
+</Project>

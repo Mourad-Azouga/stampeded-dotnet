@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Stampeded/Stampeded.csproj" />
+    <Project Path="src/Stampeded.Hosting/Stampeded.Hosting.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Stampeded.Tests/Stampeded.Tests.csproj" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/Stampeded.Sample/Stampeded.Sample.csproj" />
+  </Folder>
+</Solution>
