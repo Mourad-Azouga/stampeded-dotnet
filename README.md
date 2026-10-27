@@ -10,33 +10,41 @@ upstream `libstampeded_ffi` C ABI. The upstream library owns database connection
 claiming, heartbeats and outcome reporting. Your application executes the job handlers in C#.
 
 **Development preview.** Packages have not been published to NuGet. The binding currently targets
-.NET 10 and PostgreSQL 18+. Native builds and tests have passed on Linux x64, Windows x64 and
-macOS ARM64; PostgreSQL integration tests run on Linux. See the [validation record](docs/validation.md)
-for the tested revision and remaining verification boundaries.
+.NET 10 and PostgreSQL 18+. The current upstream 0.4.0 baseline is verified locally on Linux x64.
+Windows x64 and macOS ARM64 passed CI on an earlier baseline; the updated native jobs still need
+another run. See the [validation record](docs/validation.md) and [upstream review](docs/upstream-0.4-review.md)
+for tested revisions and the reproduced deduplication edge case.
 
 ## Build from source
 
-Install .NET 10, Bash, Python 3, Rust 1.99.0 through rustup, and your platform's C/C++ build tools.
-On Windows, use Git Bash with the Visual Studio C++ build tools installed. Bash, Rust and Python
-are build tools; applications consuming a package with their native asset do not need them. The
-Bash build script calls the Python source verifier; package verification also uses Python.
+Install .NET 10, Bash, Rust 1.99.0 through rustup, and your platform's C/C++ build tools.
+On Windows, use Git Bash with the Visual Studio C++ build tools installed. Bash and Rust are build
+tools; applications consuming a package with their native asset do not need them. All script entry
+points use Bash. Verification runs the C# tool in `tools/Stampeded.Verify` using the .NET SDK; it has
+no external package dependencies. Python is not required.
 
 ```sh
-git clone --recurse-submodules https://github.com/Mourad-Azouga/stampeded-dotnet.git
+git clone https://github.com/Mourad-Azouga/stampeded-dotnet.git
 cd stampeded-dotnet
 bash scripts/build-native.sh
 dotnet build Stampeded.slnx -c Release
 ```
 
-For an existing checkout, initialize the pinned upstream dependency first:
+The C ABI connector lives in `native/stampeded-ffi/` and depends on the published `stampeded`
+crate. No Git submodule is needed. Builds use `native/Cargo.lock` and stage the shared library in
+`runtimes/<rid>/native/`. To refresh the engine within the manifest's `0.4` compatibility range:
 
 ```sh
-git submodule update --init --recursive
+bash scripts/build-native.sh --update
 ```
 
-The build script verifies the pinned, unmodified upstream submodule, uses its Cargo.lock, and stages the
-shared library in `runtimes/<rid>/native/`. Source projects copy the asset matching the SDK host RID
-into their output directory. Override `NativeRuntimeIdentifier` when needed:
+Commit the updated lockfile after validation. Dependabot also checks Cargo dependencies weekly.
+Incompatible engine releases require reviewing the connector and updating the version requirement.
+Existing NuGet packages receive engine updates when rebuilt and released.
+
+The build prepares the matching crate schema and provenance in `artifacts/native-source/`.
+Source projects copy the asset matching the SDK host RID into their output directory.
+Override `NativeRuntimeIdentifier` when needed:
 
 ```sh
 dotnet build Stampeded.slnx -c Release -p:NativeRuntimeIdentifier=linux-x64
@@ -55,6 +63,7 @@ Console.WriteLine(StampededRuntime.Version); // C ABI version, currently 0.1.0
 For a disposable development database:
 
 ```sh
+bash scripts/prepare-native.sh # also runs as part of build-native.sh
 docker compose up -d
 ```
 
@@ -63,7 +72,7 @@ database, install it once using PostgreSQL 18 tools:
 
 ```sh
 psql "$STAMPEDED_DATABASE_URL" -v ON_ERROR_STOP=1 -1 \
-  -f native/upstream/crates/stampeded/schema/schema.sql
+  -f artifacts/native-source/schema.sql
 psql "$STAMPEDED_DATABASE_URL" -v ON_ERROR_STOP=1 \
   -c "SELECT stampeded_create_queue('mail');"
 ```
@@ -72,7 +81,10 @@ The Compose URL is `postgres://stampeded:stampeded@localhost:55432/stampeded`.
 Run the upstream daemon against the same database/schema for scheduling, recovery, expiry,
 retention and administration. Start it with `--no-worker` when the jobs are handled by your C#
 application, so its built-in worker does not consume those jobs. Use a daemon compatible with the
-pinned upstream revision; the .NET package does not include it.
+resolved core crate version; the .NET package does not include it. Core 0.4.0 records schema version 3.
+For an existing database, run that daemon with `--migrate` to upgrade it in place. Connecting from
+C# does not migrate the database. The packaged `schema.sql` is for fresh installs only; Compose
+initialization scripts also run only when its database volume is first created.
 
 ## Enqueue and execute a C# handler
 
@@ -174,31 +186,37 @@ missing database configuration fail instead of skipping those tests. Npgsql is u
 test harness to install the schema and inspect persisted results.
 
 ```sh
-python scripts/verify-upstream.py
+bash scripts/verify-upstream.sh
 dotnet format Stampeded.slnx --verify-no-changes --no-restore
 dotnet pack Stampeded.slnx -c Release --no-build -o artifacts/packages
-python scripts/verify-package.py artifacts/packages/Stampeded.NET.0.1.0-preview.1.nupkg
+bash scripts/verify-package.sh artifacts/packages/Stampeded.NET.0.1.0-preview.1.nupkg
 ```
 
 A package contains only the native assets staged before packing. A local Linux-only package cannot
 run on Windows. CI combines the tested platform assets into one package. No package publishing is
 automatic.
 
+See [the workload testing guide](docs/testing.md) for the local Mailpit inbox, real PDF attachments,
+private-CA TLS and required test settings.
+
 Read [the architecture guide](docs/architecture.md), [compatibility boundaries](docs/compatibility.md)
 and [validation record](docs/validation.md) before adoption.
 
 ## Upstream source and license
 
-`native/upstream/` is a Git submodule pointing to the upstream repository at a fixed commit.
-`native/upstream.json` records its repository, commit, core version and C ABI version for package
-provenance. The build checks that the gitlink, checked-out commit and provenance agree, and rejects
-local changes to upstream sources. Builds use the unchanged workspace and Cargo.lock; the FFI
-crate disables the core's default features.
+`native/stampeded-ffi/` retains upstream's C ABI connector and header in this repository.
+`native/upstream.json` records the connector's origin revision; it does not pin the engine.
+The engine comes from crates.io, with its resolved version and checksum in `native/Cargo.lock`.
+The connector disables the core's default features and selects AWS-LC TLS.
 
-To upgrade, review the upstream changes, update the submodule and `native/upstream.json` together,
-and rerun the native, database and package checks. The library, C header and schema must all come
-from that same revision. Contributors need the submodule; NuGet consumers receive compiled native
-assets and do not need a source checkout.
+`scripts/prepare-native.sh` extracts the schema from the resolved crate and records the exact core
+version, crate checksum, connector origin and native input hashes. Packaging includes that generated
+`native/upstream.json`, the lockfile, connector header, matching schema and upstream license.
+Verification rejects stale prepared files after native inputs change.
+
+To upgrade, run `bash scripts/build-native.sh --update`, review and commit the lockfile, and rerun
+the native, database and package checks. Connector updates are reviewed separately against upstream.
+NuGet consumers receive compiled native assets and do not need Rust or a source checkout.
 
 Our C# code uses the BSD-3-Clause license in `LICENSE`. Upstream code and schema retain Abdelkader
-Boudih's BSD-3-Clause license in `native/upstream/LICENSE`, also included in the package.
+Boudih's BSD-3-Clause license in `native/stampeded-ffi/LICENSE`, also included in the package.

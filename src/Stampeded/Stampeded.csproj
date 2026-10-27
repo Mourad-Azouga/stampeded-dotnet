@@ -11,10 +11,11 @@
     <InternalsVisibleTo Include="Stampeded.Hosting" />
     <InternalsVisibleTo Include="Stampeded.Tests" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
-    <None Include="../../native/upstream/LICENSE" Pack="true" PackagePath="licenses/" />
-    <None Include="../../native/upstream.json" Pack="true" PackagePath="native/" />
-    <None Include="../../native/upstream/crates/stampeded-ffi/include/stampeded.h" Pack="true" PackagePath="native/include/" />
-    <None Include="../../native/upstream/crates/stampeded/schema/schema.sql" Pack="true" PackagePath="schema/" />
+    <None Include="../../native/stampeded-ffi/LICENSE" Pack="true" PackagePath="licenses/" />
+    <None Include="../../artifacts/native-source/upstream.json" Pack="true" PackagePath="native/" />
+    <None Include="../../native/Cargo.lock" Pack="true" PackagePath="native/" />
+    <None Include="../../native/stampeded-ffi/include/stampeded.h" Pack="true" PackagePath="native/include/" />
+    <None Include="../../artifacts/native-source/schema.sql" Pack="true" PackagePath="schema/" />
     <None Include="../../runtimes/**/*" Pack="true" PackagePath="runtimes/" />
   </ItemGroup>
   <Target Name="RequireNativeLibrary" BeforeTargets="GenerateNuspec">
@@ -22,5 +23,6 @@
       <_NativeAssetsForPackage Include="../../runtimes/*/native/stampeded_ffi.dll;../../runtimes/*/native/libstampeded_ffi.so;../../runtimes/*/native/libstampeded_ffi.dylib" />
     </ItemGroup>
     <Error Condition="'@(_NativeAssetsForPackage)' == ''" Text="Build native assets with scripts/build-native.sh before packing." />
+    <Error Condition="!Exists('../../artifacts/native-source/upstream.json') Or !Exists('../../artifacts/native-source/schema.sql')" Text="Prepare the published crate sources with scripts/prepare-native.sh before packing." />
   </Target>
 </Project>

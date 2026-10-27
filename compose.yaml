@@ -1,4 +1,15 @@
 services:
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    command: ['--smtp-disable-rdns', '--smtp-allowed-recipients', '@example\.test$', '--disable-version-check']
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
   postgres:
     image: postgres:18
     environment:
@@ -9,7 +20,12 @@ services:
       - "127.0.0.1:55432:5432"
     volumes:
       - stampeded-postgres:/var/lib/postgresql
-      - ./native/upstream/crates/stampeded/schema/schema.sql:/docker-entrypoint-initdb.d/001-stampeded.sql:ro
+      - type: bind
+        source: ./artifacts/native-source/schema.sql
+        target: /docker-entrypoint-initdb.d/001-stampeded.sql
+        read_only: true
+        bind:
+          create_host_path: false
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U stampeded -d stampeded"]
       interval: 2s

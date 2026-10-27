@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/seuros/stampeded",
-  "commit": "53bc32de1c5fc4cb84f8123c1871d6738f48c62d",
-  "coreVersion": "0.3.2",
+  "ffiSourceCommit": "d84c19ff302688c3d0a997b7be9a0b4f25e4ce8a",
+  "coreCrate": "stampeded",
   "ffiVersion": "0.1.0"
 }

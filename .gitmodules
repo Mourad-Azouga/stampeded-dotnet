@@ -1,3 +1,0 @@
-[submodule "native/upstream"]
-	path = native/upstream
-	url = https://github.com/seuros/stampeded

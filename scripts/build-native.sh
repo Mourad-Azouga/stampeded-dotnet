@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# Build the unmodified upstream C ABI and stage its library for .NET/NuGet.
+# Build the local C ABI connector against the published engine for .NET/NuGet.
 set -euo pipefail
 
 repository_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 
 usage() {
-    printf 'Usage: %s [--rid <runtime-identifier>]\n' "${0##*/}"
+    printf 'Usage: %s [--rid <runtime-identifier>] [--update]\n' "${0##*/}"
     printf 'Build for the current host, or specify a RID with its Rust target and linker installed.\n'
     printf 'Supported RIDs: linux-x64, linux-arm64, win-x64, win-arm64, osx-x64, osx-arm64\n'
+    printf 'Use --update to refresh the published engine within the Cargo version requirement.\n'
 }
 
 fail() {
@@ -16,6 +17,7 @@ fail() {
 }
 
 rid=
+update=()
 while (( $# > 0 )); do
     case "$1" in
         --rid)
@@ -32,6 +34,10 @@ while (( $# > 0 )); do
         -h|--help)
             usage
             exit 0
+            ;;
+        --update)
+            update=(--update)
+            shift
             ;;
         *)
             fail "Unknown argument: $1. Use --help for usage."
@@ -64,14 +70,7 @@ case "$rid" in
     *) fail "Unsupported RID: $rid. Use --help for supported RIDs." ;;
 esac
 
-# Keep using the shared provenance checker rather than duplicating it in Bash.
-if command -v python >/dev/null 2>&1; then
-    python "$repository_root/scripts/verify-upstream.py"
-elif command -v python3 >/dev/null 2>&1; then
-    python3 "$repository_root/scripts/verify-upstream.py"
-else
-    fail 'Python 3 is required by scripts/verify-upstream.py.'
-fi
+bash "$repository_root/scripts/prepare-native.sh" "${update[@]}"
 
 target_directory=${CARGO_TARGET_DIR:-"$repository_root/artifacts/native-target"}
 mkdir -p -- "$target_directory"
@@ -80,7 +79,7 @@ target_directory=$(cd -- "$target_directory" && pwd)
 (
     cd -- "$repository_root"
     cargo build --locked --release \
-        --manifest-path "$repository_root/native/upstream/Cargo.toml" \
+        --manifest-path "$repository_root/native/Cargo.toml" \
         -p stampeded-ffi --target "$triple" --target-dir "$target_directory"
 )
 

@@ -25,16 +25,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
       - run: rustup toolchain install 1.99.0 --profile minimal
       - run: bash scripts/build-native.sh --rid ${{ matrix.rid }}
+        shell: bash
+      - run: cargo test --locked --manifest-path native/Cargo.toml -p stampeded-ffi
         shell: bash
       - run: dotnet restore Stampeded.slnx
       - run: dotnet build Stampeded.slnx -c Release --no-restore
@@ -51,43 +48,71 @@ jobs:
     needs: native
     runs-on: ubuntu-24.04
     services:
+      mailpit:
+        image: axllent/mailpit:v1.32.0
+        ports:
+          - 1025:1025
+          - 8025:8025
+        options: >-
+          --health-cmd "/mailpit readyz"
+          --health-interval 2s --health-timeout 3s --health-retries 20
       postgres:
         image: postgres:18
         env:
-          POSTGRES_DB: stampeded_test
+          POSTGRES_DB: stampeded
           POSTGRES_USER: stampeded
           POSTGRES_PASSWORD: stampeded
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U stampeded -d stampeded_test"
+          --health-cmd "pg_isready -U stampeded -d stampeded"
           --health-interval 2s --health-timeout 3s --health-retries 20
     env:
-      STAMPEDED_TEST_CONNECTION_STRING: Host=localhost;Port=5432;Database=stampeded_test;Username=stampeded;Password=stampeded
+      STAMPEDED_TEST_CONNECTION_STRING: Host=localhost;Port=5432;Database=stampeded;Username=stampeded;Password=stampeded
       STAMPEDED_REQUIRE_DATABASE_TESTS: 1
+      STAMPEDED_TEST_MAILPIT_URL: http://localhost:8025
+      STAMPEDED_TEST_SMTP_HOST: localhost
+      STAMPEDED_TEST_SMTP_PORT: 1025
+      STAMPEDED_REQUIRE_WORKLOAD_TESTS: 1
+      STAMPEDED_REQUIRE_TLS_TESTS: 1
+      STAMPEDED_TEST_ARTIFACTS: ${{ github.workspace }}/artifacts/workloads
     steps:
       - uses: actions/checkout@v5
-        with:
-          submodules: recursive
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
+      - run: rustup toolchain install 1.99.0 --profile minimal
+      - run: bash scripts/prepare-native.sh
+        shell: bash
       - uses: actions/download-artifact@v7
         with:
           pattern: native-*
           path: runtimes
           merge-multiple: true
-      - run: python scripts/verify-upstream.py
+      - name: Enable PostgreSQL TLS with a private test CA
+        shell: bash
+        env:
+          POSTGRES_CONTAINER: ${{ job.services.postgres.id }}
+        run: |
+          certificate_directory="$RUNNER_TEMP/stampeded-tls"
+          bash scripts/configure-test-postgres-tls.sh "$POSTGRES_CONTAINER" "$certificate_directory"
+          echo "STAMPEDED_TEST_TLS_ROOT_CERT=$certificate_directory/ca.crt" >> "$GITHUB_ENV"
+      - run: bash scripts/verify-upstream.sh
+        shell: bash
       - run: dotnet restore Stampeded.slnx
       - run: dotnet build Stampeded.slnx -c Release --no-restore
       - run: dotnet test --solution Stampeded.slnx -c Release --no-build
       - run: dotnet pack Stampeded.slnx -c Release --no-build -o artifacts/packages
-      - run: python scripts/verify-package.py artifacts/packages/Stampeded.NET.0.1.0-preview.1.nupkg
+      - run: bash scripts/verify-package.sh artifacts/packages/Stampeded.NET.0.1.0-preview.1.nupkg
+        shell: bash
       - uses: actions/upload-artifact@v6
         with:
           name: nuget-preview
           path: artifacts/packages/*.nupkg
           if-no-files-found: error
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: workload-evidence
+          path: artifacts/workloads/**
+          if-no-files-found: ignore

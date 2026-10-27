@@ -8,8 +8,11 @@
     <ProjectReference Include="../../src/Stampeded.Hosting/Stampeded.Hosting.csproj" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="Npgsql" />
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <PackageReference Include="MailKit" />
+    <PackageReference Include="PdfPig" />
     <Using Include="Xunit" />
-    <None Include="../../native/upstream/crates/stampeded/schema/schema.sql" Link="schema.sql" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../native/upstream/crates/stampeded-ffi/include/stampeded.h" Link="stampeded.h" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../artifacts/native-source/schema.sql" Link="schema.sql" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../native/stampeded-ffi/include/stampeded.h" Link="stampeded.h" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
