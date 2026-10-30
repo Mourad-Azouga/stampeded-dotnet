@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace Stampeded.Interop;
 
-// Signatures mirror native/stampeded-ffi/include/stampeded.h.
+// Signatures mirror the published stampeded-ffi crate's include/stampeded.h.
 internal static partial class NativeMethods
 {
     private const string Library = "stampeded_ffi";

@@ -1,11 +1,31 @@
 # Validation record
 
+## Published FFI migration on 2026-10-30
+
+The binding now builds `stampeded-ffi` 0.4.1 directly from its checksum-pinned crates.io archive.
+The resolved core is `stampeded` 0.4.1. The copied Rust connector has been removed, while the
+published header is staged for P/Invoke and NuGet packaging. The fresh-install SQL is generated
+from the core's five numbered migrations and records their SQLx checksums. Existing databases
+require the matching upstream daemon's `--migrate`.
+
+On Linux x64, the release native library built from the published crate and exported the expected
+`stampeded_connect`, `stampeded_enqueue`, `stampeded_puller_next` and `stampeded_version` symbols.
+The standalone crate's `c_abi`, `connect` and `rules` targets passed (5 tests). Its `header` test
+cannot run from a registry archive because it also compares a sibling `go/stampeded.h` in the
+upstream GitHub checkout. The package verifier checked the published header staged from the archive.
+
+The .NET solution built with no warnings, formatting passed, and the test suite reported
+**9 passed, 0 failed, 20 skipped**. PostgreSQL, TLS and Mailpit integration tests were skipped because
+the services are not available locally. Both NuGet packages built; the core package verifier
+checked the Linux native asset, published header, SQL migrations, fresh-install script, license,
+lockfile and provenance. Bash syntax and Git whitespace checks passed. Windows and macOS builds,
+database migration execution and full workload tests still need CI validation.
+
 ## Published-crate build verified on 2026-10-27
 
-The active build now retains the C ABI connector in `native/stampeded-ffi/` and resolves the
-engine from crates.io using `native/Cargo.lock`. The schema and package provenance are prepared
-from that resolved crate. The submodule results below are historical evidence; they do not
-establish validation of this build path or of a future crate update.
+This historical build retained the C ABI connector in `native/stampeded-ffi/` and resolved the
+engine from crates.io using `native/Cargo.lock`. The schema and package provenance were prepared
+from that resolved crate. These results do not establish validation of the current published FFI.
 
 Local environment: Linux x64, .NET SDK 10.0.113, Rust 1.99.0. The resolved engine is the
 published `stampeded` 0.4.0 crate with checksum
@@ -100,8 +120,8 @@ passed on commit `ac71e577407ad179e6ff0fac638ec58a137cb751` before the submodule
 - Linux x64, Windows x64 and macOS ARM64: native build, .NET build, formatting and ABI tests.
 - Linux with PostgreSQL 18: integration tests, combined-platform packaging and package verification.
 
-The updated workflow builds the local connector against the published engine in each native job.
-Its cross-platform execution must be verified again; the previous run does not verify that change.
+The current workflow builds the published FFI directly in each native job. Its cross-platform
+execution must be verified again; the previous run does not verify that change.
 
 ## Test coverage
 

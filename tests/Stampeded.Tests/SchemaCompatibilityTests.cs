@@ -7,11 +7,11 @@ namespace Stampeded.Tests;
 public sealed class SchemaCompatibilityTests
 {
     [PostgresFact]
-    public async Task SchemaThreeKeepsHourlyAndDailyWindowsDistinct()
+    public async Task SchemaFiveKeepsHourlyAndDailyWindowsDistinct()
     {
         await using var database = await Database.CreateAsync();
         await using var version = database.DataSource.CreateCommand("SELECT version FROM stampeded_schema");
-        Assert.Equal(3, (int)(await version.ExecuteScalarAsync())!);
+        Assert.Equal(5, (int)(await version.ExecuteScalarAsync())!);
         await database.ExecuteAsync("""
             INSERT INTO stampeded_jobs (queue, task, dedup_scope, dedup_period, inserted_at)
             VALUES ('mail', 'report', 'account:42', 'hour', '2026-10-24T00:30:00Z'),

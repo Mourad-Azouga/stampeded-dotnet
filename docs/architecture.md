@@ -12,7 +12,7 @@ Stampeded: requests, snapshots, client, puller, lease, context
                     |
 Interop: LibraryImport, UTF-8, C structs, SafeHandle, status/error conversion
                     |
-Local libstampeded_ffi connector -> published stampeded crate -> PostgreSQL
+Published libstampeded_ffi -> published stampeded crate -> PostgreSQL
 ```
 
 The scheduler and maintenance daemon run separately using the upstream project's binaries.
@@ -106,21 +106,19 @@ process can fail after an effect and before persisting its checkpoint.
 
 ## Packaging and source provenance
 
-`native/stampeded-ffi/` retains the upstream C ABI source and header locally. Its origin commit is
-recorded in `native/upstream.json`. The connector depends on the published `stampeded` crate with
-default features disabled and AWS-LC TLS selected. `native/Cargo.lock` records the exact engine and
-transitive dependencies. There is no Git submodule or local copy of the engine.
+`native/upstream.json` pins the published C ABI crate and archive checksum. Its published source is
+extracted only for builds. `native/Cargo.lock` records the exact core and transitive dependencies.
+There is no Git submodule or local Rust source.
 
-Preparation reads Cargo's resolved package metadata, requires the engine to come from crates.io,
-and copies its schema into `artifacts/native-source/`. Generated package provenance records the
-core version/checksum, connector origin and native input hashes; verification rejects stale inputs
-or a modified prepared schema. The lockfile, header, schema and upstream license accompany the package.
+Preparation reads Cargo's resolved package metadata, requires the core to come from crates.io,
+and copies its migrations into `artifacts/native-source/`. It generates fresh-install SQL with the
+migration ledger. Package provenance records both crate versions and checksums; verification rejects
+stale inputs or modified prepared files. The lockfile, header, SQL and license accompany the package.
 Native assets use standard `runtimes/<rid>/native/` NuGet paths. Built assets, Cargo outputs and .NET
 artifacts are ignored by Git.
 
-`build-native.sh --update` refreshes compatible core releases; normal builds use `--locked`.
-Dependabot checks Cargo dependencies weekly. Incompatible core releases and changes to the local
-connector require review and validation before releasing rebuilt NuGet packages.
+`build-native.sh --update` refreshes published FFI releases within the current series and their
+dependencies; normal builds use `--locked`. A new release series requires an explicit pin change.
 
 Interop practices follow Microsoft's [native interoperability guidance](https://learn.microsoft.com/en-us/dotnet/standard/native-interop/best-practices):
 LibraryImport, explicit ABI types and UTF-8 strings, and SafeHandle resource ownership.
@@ -128,7 +126,7 @@ LibraryImport, explicit ABI types and UTF-8 strings, and SafeHandle resource own
 ## Build verification
 
 All developer script entry points are Bash scripts in `scripts/`. The native build prepares the
-resolved crate's schema and provenance before compiling the connector. The verifier entry points run `tools/Stampeded.Verify`,
+resolved crate's schema and provenance before compiling the published FFI. The verifier entry points run `tools/Stampeded.Verify`,
 a non-packable C# console tool included in the solution's build and formatting checks. It uses
 .NET's JSON, ZIP and XML APIs to validate source provenance and package contents. No Python or
 third-party parsing tools are required. The tool is not a runtime dependency of either NuGet package.

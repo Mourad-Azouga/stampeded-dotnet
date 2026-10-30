@@ -7,7 +7,7 @@ namespace Stampeded.Tests;
 public sealed class NativeTests
 {
     [Fact]
-    public void LoadsTheActualUpstreamLibrary() => Assert.Equal("0.1.0", StampededRuntime.Version);
+    public void LoadsTheActualUpstreamLibrary() => Assert.Equal("0.4.1", StampededRuntime.Version);
 
     [Fact]
     public void OptionsMatchThe64BitCLayout()

@@ -11,11 +11,12 @@
     <InternalsVisibleTo Include="Stampeded.Hosting" />
     <InternalsVisibleTo Include="Stampeded.Tests" />
     <None Include="../../README.md" Pack="true" PackagePath="/" />
-    <None Include="../../native/stampeded-ffi/LICENSE" Pack="true" PackagePath="licenses/" />
+    <None Include="../../artifacts/native-source/LICENSE" Pack="true" PackagePath="licenses/" />
     <None Include="../../artifacts/native-source/upstream.json" Pack="true" PackagePath="native/" />
     <None Include="../../native/Cargo.lock" Pack="true" PackagePath="native/" />
-    <None Include="../../native/stampeded-ffi/include/stampeded.h" Pack="true" PackagePath="native/include/" />
+    <None Include="../../artifacts/native-source/stampeded.h" Pack="true" PackagePath="native/include/" />
     <None Include="../../artifacts/native-source/schema.sql" Pack="true" PackagePath="schema/" />
+    <None Include="../../artifacts/native-source/migrations/*.sql" Pack="true" PackagePath="schema/migrations/" />
     <None Include="../../runtimes/**/*" Pack="true" PackagePath="runtimes/" />
   </ItemGroup>
   <Target Name="RequireNativeLibrary" BeforeTargets="GenerateNuspec">

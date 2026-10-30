@@ -55,7 +55,7 @@ absolute paths for certificate and artifact environment variables.
   evidence of exactly-once delivery across a process kill or an ambiguous SMTP acknowledgement.
 - The TLS case checks `pg_stat_ssl` for the native pool and rejects a different, untrusted CA.
 
-`SchemaCompatibilityTests` also checks schema version 3, distinct hourly/daily deduplication windows,
+`SchemaCompatibilityTests` also checks schema version 5, distinct hourly/daily deduplication windows,
 and the upstream colon-scope forgery fix. The separate [upstream review](upstream-0.4-review.md)
 records the byte-escape scope collision that remains outside those passing cases.
 

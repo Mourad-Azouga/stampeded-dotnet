@@ -35,12 +35,14 @@ internal static class PackageVerifier
         Dictionary<string, string> expected = new()
         {
             ["README.md"] = "README.md",
-            ["licenses/LICENSE"] = "native/stampeded-ffi/LICENSE",
+            ["licenses/LICENSE"] = "artifacts/native-source/LICENSE",
             ["native/upstream.json"] = "artifacts/native-source/upstream.json",
             ["native/Cargo.lock"] = "native/Cargo.lock",
-            ["native/include/stampeded.h"] = "native/stampeded-ffi/include/stampeded.h",
+            ["native/include/stampeded.h"] = "artifacts/native-source/stampeded.h",
             ["schema/schema.sql"] = "artifacts/native-source/schema.sql"
         };
+        foreach (var migration in Directory.GetFiles(Path.Combine(root, "artifacts/native-source/migrations"), "*.sql"))
+            expected[$"schema/migrations/{Path.GetFileName(migration)}"] = Path.GetRelativePath(root, migration);
         foreach (var (destination, source) in expected)
         {
             var entry = package.GetEntry(destination)

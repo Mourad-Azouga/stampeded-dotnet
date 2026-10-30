@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the local C ABI connector against the published engine for .NET/NuGet.
+# Build the published C ABI crate for .NET/NuGet.
 set -euo pipefail
 
 repository_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
@@ -8,7 +8,7 @@ usage() {
     printf 'Usage: %s [--rid <runtime-identifier>] [--update]\n' "${0##*/}"
     printf 'Build for the current host, or specify a RID with its Rust target and linker installed.\n'
     printf 'Supported RIDs: linux-x64, linux-arm64, win-x64, win-arm64, osx-x64, osx-arm64\n'
-    printf 'Use --update to refresh the published engine within the Cargo version requirement.\n'
+    printf 'Use --update to refresh the published FFI within its current release series and dependencies.\n'
 }
 
 fail() {
@@ -79,7 +79,7 @@ target_directory=$(cd -- "$target_directory" && pwd)
 (
     cd -- "$repository_root"
     cargo build --locked --release \
-        --manifest-path "$repository_root/native/Cargo.toml" \
+        --manifest-path "$repository_root/artifacts/native-source/crate/Cargo.toml" \
         -p stampeded-ffi --target "$triple" --target-dir "$target_directory"
 )
 

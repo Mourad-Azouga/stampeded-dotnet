@@ -7,6 +7,15 @@ try
 {
     switch (args)
     {
+        case ["ffi-version", var root]:
+            Console.WriteLine(UpstreamVerifier.FfiVersion(Path.GetFullPath(root)));
+            break;
+        case ["ffi-checksum", var root]:
+            Console.WriteLine(UpstreamVerifier.FfiChecksum(Path.GetFullPath(root)));
+            break;
+        case ["refresh-ffi", var root, var index]:
+            UpstreamVerifier.RefreshFfi(Path.GetFullPath(root), Path.GetFullPath(index));
+            break;
         case ["prepare-upstream", var root, var metadata]:
             UpstreamVerifier.Prepare(Path.GetFullPath(root), Path.GetFullPath(metadata));
             break;
@@ -18,7 +27,7 @@ try
             PackageVerifier.Verify(Path.GetFullPath(root), Path.GetFullPath(package));
             break;
         default:
-            Console.Error.WriteLine("Usage: Stampeded.Verify prepare-upstream <repository> <cargo-metadata.json> | upstream <repository> | package <repository> <package.nupkg>");
+            Console.Error.WriteLine("Usage: Stampeded.Verify ffi-version|ffi-checksum <repository> | prepare-upstream <repository> <cargo-metadata.json> | upstream <repository> | package <repository> <package.nupkg>");
             return 2;
     }
     return 0;

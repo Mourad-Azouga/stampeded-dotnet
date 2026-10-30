@@ -13,6 +13,6 @@
     <PackageReference Include="PdfPig" />
     <Using Include="Xunit" />
     <None Include="../../artifacts/native-source/schema.sql" Link="schema.sql" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="../../native/stampeded-ffi/include/stampeded.h" Link="stampeded.h" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../artifacts/native-source/stampeded.h" Link="stampeded.h" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

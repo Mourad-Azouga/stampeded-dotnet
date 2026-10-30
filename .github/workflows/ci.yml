@@ -31,7 +31,8 @@ jobs:
       - run: rustup toolchain install 1.99.0 --profile minimal
       - run: bash scripts/build-native.sh --rid ${{ matrix.rid }}
         shell: bash
-      - run: cargo test --locked --manifest-path native/Cargo.toml -p stampeded-ffi
+      # The crate's header test assumes the upstream repository's go/ sibling, absent from crates.io.
+      - run: cargo test --locked --manifest-path artifacts/native-source/crate/Cargo.toml -p stampeded-ffi --test c_abi --test connect --test rules
         shell: bash
       - run: dotnet restore Stampeded.slnx
       - run: dotnet build Stampeded.slnx -c Release --no-restore
