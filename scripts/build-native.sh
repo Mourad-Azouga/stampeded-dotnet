@@ -17,7 +17,7 @@ fail() {
 }
 
 rid=
-update=()
+update_requested=false
 while (( $# > 0 )); do
     case "$1" in
         --rid)
@@ -36,7 +36,7 @@ while (( $# > 0 )); do
             exit 0
             ;;
         --update)
-            update=(--update)
+            update_requested=true
             shift
             ;;
         *)
@@ -70,7 +70,11 @@ case "$rid" in
     *) fail "Unsupported RID: $rid. Use --help for supported RIDs." ;;
 esac
 
-bash "$repository_root/scripts/prepare-native.sh" "${update[@]}"
+if [[ "$update_requested" == true ]]; then
+    bash "$repository_root/scripts/prepare-native.sh" --update
+else
+    bash "$repository_root/scripts/prepare-native.sh"
+fi
 
 target_directory=${CARGO_TARGET_DIR:-"$repository_root/artifacts/native-target"}
 mkdir -p -- "$target_directory"

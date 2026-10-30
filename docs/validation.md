@@ -10,9 +10,11 @@ require the matching upstream daemon's `--migrate`.
 
 On Linux x64, the release native library built from the published crate and exported the expected
 `stampeded_connect`, `stampeded_enqueue`, `stampeded_puller_next` and `stampeded_version` symbols.
-The standalone crate's `c_abi`, `connect` and `rules` targets passed (5 tests). Its `header` test
-cannot run from a registry archive because it also compares a sibling `go/stampeded.h` in the
-upstream GitHub checkout. The package verifier checked the published header staged from the archive.
+The standalone crate's three `rules` tests and the database-free cases in `connect` passed. The
+`c_abi` test reported a pass locally because it skips without `STAMPEDED_TEST_DATABASE_URL`; its
+end-to-end C/database path remains unverified and now runs in the PostgreSQL CI job with `connect`.
+The crate's `header` test cannot run from a registry archive because it also compares a sibling
+`go/stampeded.h` in the upstream GitHub checkout. The package verifier checked the published header.
 
 The .NET solution built with no warnings, formatting passed, and the test suite reported
 **9 passed, 0 failed, 20 skipped**. PostgreSQL, TLS and Mailpit integration tests were skipped because

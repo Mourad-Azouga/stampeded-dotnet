@@ -19,5 +19,5 @@
 - Switched the native binding to the published `stampeded-ffi` 0.4.1 crate and removed the repository's copied Rust C ABI connector. C# P/Invoke now loads a shared library built directly from that crate; its exported signatures remain compatible with the binding.
 - Pinned the published FFI archive by SHA-256 and its core/dependencies in `native/Cargo.lock`. Preparation stages the crate's C header, the core's numbered SQL migrations, a fresh-install script with migration records, and package provenance.
 - Updated native builds, CI, database setup, compatibility documentation and package verification for the published FFI and schema version 5. Existing databases still require the matching upstream daemon's `--migrate`.
-- Validated the Linux x64 native build, five applicable published FFI tests, nine .NET tests, formatting and both NuGet packages. 
-- Still need to test on mailkit or smtn
+- Validated the Linux x64 native build, four database-free FFI checks, nine .NET tests, formatting and both NuGet packages. The upstream C/database test is now assigned to the PostgreSQL CI job.
+- PostgreSQL, TLS, Mailpit/SMTP and Windows/macOS validation of this release remain pending.

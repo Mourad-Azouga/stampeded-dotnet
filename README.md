@@ -11,8 +11,8 @@ claiming, heartbeats and outcome reporting. Your application executes the job ha
 
 **Development preview.** The repository builds NuGet packages locally; no publishing workflow is
 configured. This binding targets .NET 10, PostgreSQL 18+, the published `stampeded-ffi` 0.4.1
-crate and its `stampeded` 0.4.1 core (schema version 5). On Linux x64, the native build, five
-applicable FFI tests, nine .NET tests and package verification passed. Twenty tests needing
+crate and its `stampeded` 0.4.1 core (schema version 5). On Linux x64, the native build, four
+database-free FFI checks, nine .NET tests and package verification passed. Twenty tests needing
 PostgreSQL, TLS or Mailpit were skipped. The new build still needs Windows and macOS CI runs,
 database migration execution and workload validation. Earlier cross-platform CI results apply to
 an older baseline. See the [validation record](docs/validation.md) and the

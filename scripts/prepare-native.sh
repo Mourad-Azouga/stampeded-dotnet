@@ -28,7 +28,11 @@ elif [[ ! -f "$archive" ]]; then
     curl --fail --location --retry 3 --silent --show-error \
         "https://static.crates.io/crates/stampeded-ffi/stampeded-ffi-$version.crate" -o "$archive"
 fi
-actual=$(sha256sum "$archive")
+if command -v sha256sum >/dev/null 2>&1; then
+    actual=$(sha256sum "$archive")
+else
+    actual=$(shasum -a 256 "$archive")
+fi
 [[ "${actual%% *}" == "$checksum" ]] || { printf 'Published FFI archive checksum mismatch.\n' >&2; exit 1; }
 
 crate="$destination/crate"
