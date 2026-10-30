@@ -6,7 +6,7 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest</AnalysisLevel>
     <Deterministic>true</Deterministic>
-    <Version>0.1.0-preview.1</Version>
+    <Version>0.1.2-preview.1</Version>
     <Authors>Mourad Azouga</Authors>
     <RepositoryUrl>https://github.com/Mourad-Azouga/stampeded-dotnet</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

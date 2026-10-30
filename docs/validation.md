@@ -8,11 +8,23 @@ published header is staged for P/Invoke and NuGet packaging. The fresh-install S
 from the core's five numbered migrations and records their SQLx checksums. Existing databases
 require the matching upstream daemon's `--migrate`.
 
+### GitHub Actions validation on 2026-10-30
+
+[CI run 40982104354](https://github.com/Mourad-Azouga/stampeded-dotnet/actions/runs/40982104354)
+passed native builds and database-free checks on Linux x64, Windows x64 and macOS ARM64. Its Linux
+integration job passed the upstream C ABI lifecycle and connection tests against PostgreSQL 18,
+then passed all 29 .NET tests with zero skips, including private-CA TLS and Mailpit workloads.
+The combined NuGet package passed verification with three native assets. This is validation of
+commit `0f4a7405fbd064eef773559ccdf22dc0e5ac4377` and its `0.1.0-preview.1` packages. The
+`0.1.2-preview.1` release requires a new successful CI run before publication.
+
+### Earlier local checks
+
 On Linux x64, the release native library built from the published crate and exported the expected
 `stampeded_connect`, `stampeded_enqueue`, `stampeded_puller_next` and `stampeded_version` symbols.
 The standalone crate's three `rules` tests and the database-free cases in `connect` passed. The
 `c_abi` test reported a pass locally because it skips without `STAMPEDED_TEST_DATABASE_URL`; its
-end-to-end C/database path remains unverified and now runs in the PostgreSQL CI job with `connect`.
+end-to-end C/database path was subsequently exercised by the PostgreSQL CI job above.
 The crate's `header` test cannot run from a registry archive because it also compares a sibling
 `go/stampeded.h` in the upstream GitHub checkout. The package verifier checked the published header.
 
@@ -21,7 +33,7 @@ The .NET solution built with no warnings, formatting passed, and the test suite 
 the services are not available locally. Both NuGet packages built; the core package verifier
 checked the Linux native asset, published header, SQL migrations, fresh-install script, license,
 lockfile and provenance. Bash syntax and Git whitespace checks passed. Windows and macOS builds,
-database migration execution and full workload tests still need CI validation.
+database migration execution and full workload tests were subsequently validated by the CI run above.
 
 ## Published-crate build verified on 2026-10-27
 
@@ -122,8 +134,7 @@ passed on commit `ac71e577407ad179e6ff0fac638ec58a137cb751` before the submodule
 - Linux x64, Windows x64 and macOS ARM64: native build, .NET build, formatting and ABI tests.
 - Linux with PostgreSQL 18: integration tests, combined-platform packaging and package verification.
 
-The current workflow builds the published FFI directly in each native job. Its cross-platform
-execution must be verified again; the previous run does not verify that change.
+The later CI run documented above verified the published FFI across all three platforms.
 
 ## Test coverage
 

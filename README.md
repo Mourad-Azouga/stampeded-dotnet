@@ -9,13 +9,12 @@ This is an independent, unofficial integration maintained by Mourad Azouga. Its 
 upstream `libstampeded_ffi` C ABI. The upstream library owns database connections, enqueueing,
 claiming, heartbeats and outcome reporting. Your application executes the job handlers in C#.
 
-**Development preview.** The repository builds NuGet packages locally; no publishing workflow is
-configured. This binding targets .NET 10, PostgreSQL 18+, the published `stampeded-ffi` 0.4.1
-crate and its `stampeded` 0.4.1 core (schema version 5). On Linux x64, the native build, four
-database-free FFI checks, nine .NET tests and package verification passed. Twenty tests needing
-PostgreSQL, TLS or Mailpit were skipped. The new build still needs Windows and macOS CI runs,
-database migration execution and workload validation. Earlier cross-platform CI results apply to
-an older baseline. See the [validation record](docs/validation.md) and the
+**Development preview.** Version `0.1.2-preview.1` can be published manually through GitHub Actions
+after the full CI run passes. This binding targets .NET 10, PostgreSQL 18+, the published
+`stampeded-ffi` 0.4.1 crate and its `stampeded` 0.4.1 core (schema version 5). CI passed on Linux x64, Windows x64 and
+macOS ARM64. The PostgreSQL integration job passed the upstream C ABI/database tests and all 29
+.NET tests, including TLS and Mailpit workloads, with no skips. It verified a NuGet package with
+all three native assets. See the [validation record](docs/validation.md) and the
 [historical 0.4.0 upstream review](docs/upstream-0.4-review.md).
 
 ## Build from source
@@ -192,13 +191,25 @@ test harness to install the schema and inspect persisted results.
 ```sh
 bash scripts/verify-upstream.sh
 dotnet format Stampeded.slnx --verify-no-changes --no-restore
-dotnet pack Stampeded.slnx -c Release --no-build -o artifacts/packages
-bash scripts/verify-package.sh artifacts/packages/Stampeded.NET.0.1.0-preview.1.nupkg
+dotnet pack src/Stampeded/Stampeded.csproj -c Release --no-build -o artifacts/packages
+dotnet pack src/Stampeded.Hosting/Stampeded.Hosting.csproj -c Release --no-build -o artifacts/packages
+bash scripts/verify-package.sh artifacts/packages/Stampeded.NET.0.1.2-preview.1.nupkg
 ```
 
 A package contains only the native assets staged before packing. A local Linux-only package cannot
-run on Windows. CI combines the tested platform assets into one package. No package publishing is
-automatic.
+run on Windows. CI combines the tested platform assets into one package.
+
+## Publish to NuGet
+
+The maintainer must first create a [NuGet.org Trusted Publishing policy](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing)
+for repository owner `Mourad-Azouga`, repository `stampeded-dotnet`, workflow file `ci.yml`,
+and environment `Production`. The policy belongs to NuGet.org account `mourad_12` and allows
+publishing new packages and new versions for `Stampeded.NET` and `Stampeded.NET.Hosting`.
+
+After the release changes are on `main`, run the `ci` workflow manually from GitHub Actions on
+`main`. The workflow rebuilds and verifies
+both `0.1.2-preview.1` packages, then publishes the core package followed by Hosting using a
+short-lived key. Ordinary pushes and pull requests never publish packages.
 
 See [the workload testing guide](docs/testing.md) for the local Mailpit inbox, real PDF attachments,
 private-CA TLS and required test settings.

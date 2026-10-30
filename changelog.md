@@ -14,10 +14,11 @@
 - Updated the native build, Compose setup, tests and NuGet packaging to use the schema from that same resolved crate. Package provenance records the engine version, crate checksum and connector source revision; verification rejects stale or changed native inputs.
 - Added `build-native.sh --update` to refresh compatible `0.4.x` engine releases and weekly Cargo dependency update PRs. Existing NuGet packages receive updates when rebuilt and released.
 - Validated the Linux x64 native build, four Rust connector checks, nine .NET tests and both NuGet packages.
-### 0.1.2
+### 0.1.2-preview.1
 
 - Switched the native binding to the published `stampeded-ffi` 0.4.1 crate and removed the repository's copied Rust C ABI connector. C# P/Invoke now loads a shared library built directly from that crate; its exported signatures remain compatible with the binding.
 - Pinned the published FFI archive by SHA-256 and its core/dependencies in `native/Cargo.lock`. Preparation stages the crate's C header, the core's numbered SQL migrations, a fresh-install script with migration records, and package provenance.
 - Updated native builds, CI, database setup, compatibility documentation and package verification for the published FFI and schema version 5. Existing databases still require the matching upstream daemon's `--migrate`.
 - Validated the Linux x64 native build, four database-free FFI checks, nine .NET tests, formatting and both NuGet packages. The upstream C/database test is now assigned to the PostgreSQL CI job.
-- PostgreSQL, TLS, Mailpit/SMTP and Windows/macOS validation of this release remain pending.
+- GitHub Actions run 40982104354 passed Linux x64, Windows x64 and macOS ARM64 native jobs, the upstream C ABI/database tests, all 29 .NET tests with no skips, and three-platform NuGet package verification.
+- Prepared manual NuGet.org publishing through GitHub Trusted Publishing
